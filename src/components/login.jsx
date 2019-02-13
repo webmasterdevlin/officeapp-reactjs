@@ -1,36 +1,51 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Form from "./common/form";
+import { login } from "../services/auth.service";
 import "../styles/login.css";
-import auth from "../services/auth.service";
 
 class Login extends Form {
   state = {
     data: {
-      email: "",
-      password: ""
+      email: null,
+      password: null
     }
   };
 
-  onSubmit = async e => {
-    e.preventDefault();
-    await auth.login(this.state.data);
-    // this.props.history.goBack();
-    // this.props.history.replace("/home");
-    window.location = "/";
+  handleOnSubmit = async event => {
+    event.preventDefault();
+
+    this._sendLogin();
   };
 
-  handleChange = ({ currentTarget }) => {
+  handleOnChange = ({ currentTarget }) => {
+    this._formToModel(currentTarget);
+  };
+
+  handleOnReset = () => {
+    this._reset();
+  };
+
+  _sendLogin = async () => {
+    try {
+      await login(this.state.data);
+      window.location = "/";
+    } catch (e) {
+      alert(`Can't process right now: ${e.message}`);
+    }
+  };
+
+  _formToModel = currentTarget => {
     const loginModel = { ...this.state.data };
     const { name, value } = currentTarget;
     loginModel[name] = value;
-
     this.setState({ data: loginModel });
   };
 
-  reset = () => {
+  _reset = () => {
     const response = prompt("Enter your email here");
     if (response) {
+      // Sendgrid email reset here
       alert("Please check your email");
       return;
     }
@@ -39,7 +54,7 @@ class Login extends Form {
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <div className="login-signup-bg">
           <div className="container py-5">
             <div className="row">
@@ -51,7 +66,7 @@ class Login extends Form {
                         <h3 className="mb-0 my-2">Login Page</h3>
                       </div>
                       <form
-                        onSubmit={this.onSubmit}
+                        onSubmit={this.handleOnSubmit}
                         className="card-body form-group"
                       >
                         <div className="form-group">
@@ -61,7 +76,7 @@ class Login extends Form {
                           {this.renderInput("password", "Password", "password")}
                         </div>
                         <div className="form-group">
-                          {this.renderButton(
+                          {Form.renderButton(
                             "Login",
                             "mr-1 btn btn-success btn-lg float-right",
                             "password"
@@ -80,7 +95,7 @@ class Login extends Form {
               <button
                 className="link-button"
                 type="button"
-                onClick={this.reset}
+                onClick={this.handleOnReset}
               >
                 Reset
               </button>
@@ -101,7 +116,7 @@ class Login extends Form {
             </div>
           </div>
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

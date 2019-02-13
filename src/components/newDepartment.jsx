@@ -1,32 +1,51 @@
 import React from "react";
 import Form from "./common/form";
-import * as departmentService from "../services/department.service";
+import { postDepartment } from "../services/department.service";
 import NavBar from "./navBar";
+import { routeCanActivate } from "../services/auth.service";
 
 class NewDepartment extends Form {
-  nameRef = React.createRef();
-  descriptionRef = React.createRef();
-  headRef = React.createRef();
-  codeRef = React.createRef();
-
   state = {
     data: {
-      name: "",
-      description: "",
-      head: "",
-      code: ""
+      name: null,
+      description: null,
+      head: null,
+      code: null
     }
   };
 
-  handleSubmit = async event => {
+  handleOnSubmit = async event => {
     event.preventDefault();
 
-    await departmentService.addDepartment(this.state.data);
+    if (this._checkNameIfEmpty()) return;
 
-    this.props.history.replace("/");
+    if (!routeCanActivate()) this.props.history.replace("/");
+
+    this._saveDepartment();
   };
 
-  handleChange = ({ currentTarget: input }) => {
+  handleOnChange = ({ currentTarget: input }) => {
+    this._formToModel(input);
+  };
+
+  _checkNameIfEmpty = () => {
+    const { name } = this.state.data;
+    if (!(name === null || name === "")) return false;
+
+    alert("Name can't be empty");
+    return true;
+  };
+
+  _saveDepartment = async () => {
+    try {
+      await postDepartment(this.state.data);
+      this.props.history.replace("/");
+    } catch (e) {
+      alert(`Can't process right now: ${e.message}`);
+    }
+  };
+
+  _formToModel = input => {
     const user = { ...this.state.data };
     user[input.name] = input.value;
     console.log(input.value);
@@ -35,11 +54,11 @@ class NewDepartment extends Form {
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <NavBar />
         <h2 className="text-center m-4">Add New Department</h2>
         <div className="container py-5">
-          <form className="form-row" onSubmit={this.handleSubmit}>
+          <form className="form-row" onSubmit={this.handleOnSubmit}>
             <div className="form-group col-md-6">
               {this.renderInput("name", "Name")}
             </div>
@@ -52,14 +71,14 @@ class NewDepartment extends Form {
             <div className="form-group col-md-6">
               {this.renderInput("code", "Code")}
             </div>
-            {this.renderButton(
-              "Save",
+            {Form.renderButton(
+              "Add",
               "btn btn-success btn-lg btn-block my-4",
               "submit"
             )}
           </form>
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

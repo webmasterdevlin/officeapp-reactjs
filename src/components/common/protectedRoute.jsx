@@ -7,9 +7,7 @@ const ProtectedRoute = ({ path, component: Component, render, ...rest }) => {
     <Route
       {...rest}
       render={props => {
-        const routeCanActivate = auth.routeCanActivate();
-        console.log("routeCanActivate:", routeCanActivate);
-        if (!routeCanActivate)
+        if (!auth.routeCanActivate())
           return (
             <Redirect
               to={{

@@ -1,5 +1,4 @@
 import { getJwt } from "../services/auth.service";
-
 const token = getJwt();
 
 export const authBearerHeaders = {

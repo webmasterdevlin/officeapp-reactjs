@@ -15,12 +15,12 @@ class Form extends Component {
         name={name}
         type={type}
         value={data[name]}
-        onChange={this.handleChange}
+        onChange={this.handleOnChange}
       />
     );
   }
 
-  renderButton(label, style, type, func) {
+  static renderButton(label, style, type, func) {
     return (
       <button type={type} className={`${style}`} onClick={func}>
         {label}

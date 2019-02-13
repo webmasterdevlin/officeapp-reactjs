@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import { NavLink, Link } from "react-router-dom";
-
-import { loadDepartments } from "../services/department.service";
 import NavBar from "./navBar";
 import Spinner from "./spinner";
+import { NavLink, Link } from "react-router-dom";
+import { getDepartments } from "../services/department.service";
+import { routeCanActivate } from "../services/auth.service";
 import "../styles/home.css";
 
 class Home extends Component {
@@ -12,15 +12,25 @@ class Home extends Component {
   };
 
   async componentDidMount() {
-    const { data } = await loadDepartments();
-    this.setState({ departments: data });
+    if (!routeCanActivate()) this.props.history.replace("/");
+
+    await this._loadDepartments();
   }
 
+  _loadDepartments = async () => {
+    try {
+      const { data } = await getDepartments();
+      this.setState({ departments: data });
+    } catch (e) {
+      alert(`Something happened: ${e.message}`);
+    }
+  };
+
   render() {
-    const departments = this.state.departments;
+    const { departments } = this.state;
 
     return (
-      <React.Fragment>
+      <>
         <NavBar />
         <table className="table table-dark">
           <thead>
@@ -66,15 +76,11 @@ class Home extends Component {
           </div>
         )}
         <div className="text-center m-5">
-          <NavLink
-            type="button"
-            className="btn btn-primary btn-lg"
-            to="/new-department"
-          >
-            Create New
+          <NavLink to="/new-department">
+            <button className="btn btn-primary btn-lg">Create New</button>
           </NavLink>
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

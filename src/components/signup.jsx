@@ -1,35 +1,46 @@
 import React from "react";
-import { signup } from "../services/user.service";
+import { postRegister } from "../services/user.service";
 import Form from "./common/form";
 
 class Signup extends Form {
   state = {
     data: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: ""
+      username: null,
+      email: null,
+      password: null,
+      confirmPassword: null
     }
   };
 
-  onSubmit = e => {
-    e.preventDefault();
+  handleOnSubmit = async event => {
+    event.preventDefault();
 
-    signup(this.state.data);
-    window.location = "/login";
+    this._sendRegistration();
   };
 
-  handleChange = ({ currentTarget }) => {
+  handleOnChange = ({ currentTarget }) => {
+    this._formToModel(currentTarget);
+  };
+
+  _sendRegistration = async () => {
+    try {
+      await postRegister(this.state.data);
+      window.location = "/login";
+    } catch (e) {
+      alert(`Can't process right now: ${e.message}`);
+    }
+  };
+
+  _formToModel = currentTarget => {
     const user = { ...this.state.data };
     const { name, value } = currentTarget;
     user[name] = value;
-    console.log(user);
     this.setState({ data: user });
   };
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <div className="login-signup-bg">
           <div className="container py-5">
             <div className="row">
@@ -42,7 +53,7 @@ class Signup extends Form {
                       </div>
                       <form
                         className="card-body form-group"
-                        onSubmit={this.onSubmit}
+                        onSubmit={this.handleOnSubmit}
                       >
                         {this.renderInput("username", "Username")}
                         {this.renderInput("email", "Email", "email")}
@@ -53,12 +64,12 @@ class Signup extends Form {
                         )}
 
                         <div className="form-group">
-                          {this.renderButton(
+                          {Form.renderButton(
                             "Register",
                             "mr-1 btn btn-success btn-lg float-right",
                             "submit"
                           )}
-                          {this.renderButton(
+                          {Form.renderButton(
                             "Cancel",
                             "mr-1 btn btn-default btn-lg float-right",
                             "button",
@@ -77,7 +88,7 @@ class Signup extends Form {
             <span>{JSON.stringify(this.state.data)}</span>
           </div>
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

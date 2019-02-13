@@ -1,64 +1,89 @@
 import React from "react";
-import { toast } from "react-toastify";
 import Form from "./common/form";
-import * as departmentService from "../services/department.service";
+import {
+  getDepartment,
+  putDepartment,
+  deleteDepartment
+} from "../services/department.service";
 import NavBar from "./navBar";
 import Spinner from "./spinner";
+import { routeCanActivate } from "../services/auth.service";
 
 class EditDepartment extends Form {
   state = {
     data: {
-      id: "",
-      name: "",
-      description: "",
-      head: "",
-      code: ""
+      id: null,
+      name: null,
+      description: null,
+      head: null,
+      code: null
     }
   };
 
   async componentDidMount() {
-    const { data: department } = await departmentService.getDepartment(
-      this.props.match.params.id
-    );
-    this.setState({ data: department });
+    if (!routeCanActivate()) this.props.history.replace("/");
+
+    this._loadDepartment();
   }
 
-  handleChange = ({ currentTarget }) => {
-    const updatedDepartment = { ...this.state.data };
-    const { name, value } = currentTarget;
-    updatedDepartment[name] = value;
-
-    this.setState({ data: updatedDepartment });
+  handleOnChange = ({ currentTarget }) => {
+    this._formToModel(currentTarget);
   };
 
-  onUpdate = async () => {
-    this.props.history.goBack();
-    try {
-      await departmentService.putDepartment(this.state.data);
-    } catch (e) {
-      if (e.response && e.response.status === 500)
-        toast.error("Something happened. Please retry.");
+  handleOnUpdate = async event => {
+    event.preventDefault();
+    if (!routeCanActivate()) this.props.history.replace("/");
 
-      this.props.history.goBack();
+    this._updateSelectedDepartment();
+  };
+
+  handleOnDelete = async () => {
+    if (!routeCanActivate()) this.props.history.replace("/");
+
+    const response = window.confirm("Are you sure you want to delete this?");
+    if (!response) return;
+
+    this._deleteSelectedDepartment();
+  };
+
+  _loadDepartment = async () => {
+    try {
+      const id = this.props.match.params.id;
+      const { data: department } = await getDepartment(id);
+      this.setState({ data: department });
+    } catch (e) {
+      alert(`Something happened: ${e.message}`);
     }
   };
 
-  onDelete = async () => {
-    // Sample of optimistic update but not actually helpful here.
-    this.props.history.replace("/");
-    try {
-      await departmentService.deleteDepartment(this.state.data.id);
-    } catch (e) {
-      if (e.response && e.response.status === 404)
-        toast.error("This department has already been deleted.");
+  _formToModel = currentTarget => {
+    const updatedDepartment = { ...this.state.data };
+    const { name, value } = currentTarget;
+    updatedDepartment[name] = value;
+    this.setState({ data: updatedDepartment });
+  };
 
+  _updateSelectedDepartment = async () => {
+    try {
+      await putDepartment(this.state.data);
       this.props.history.goBack();
+    } catch (e) {
+      alert(`Cannot process this time. ${e.message}`);
+    }
+  };
+
+  _deleteSelectedDepartment = async () => {
+    try {
+      await deleteDepartment(this.state.data.id);
+      this.props.history.replace("/");
+    } catch (e) {
+      alert(`Cannot process this time. ${e.message}`);
     }
   };
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <NavBar />
         <h2 className="text-center m-4">Edit Details</h2>
         {this.state.data.name ? (
@@ -79,17 +104,17 @@ class EditDepartment extends Form {
             </div>
             <div className="container">
               <div className="row">
-                {this.renderButton(
+                {Form.renderButton(
                   "Update",
                   "btn btn-warning col m-2",
                   "button",
-                  this.onUpdate
+                  this.handleOnUpdate
                 )}
-                {this.renderButton(
+                {Form.renderButton(
                   "Delete",
-                  "btn btn-danger col m-2",
+                  "btn btn-outline-danger col m-2",
                   "button",
-                  this.onDelete
+                  this.handleOnDelete
                 )}
               </div>
             </div>
@@ -103,7 +128,7 @@ class EditDepartment extends Form {
             <Spinner />
           </div>
         )}
-      </React.Fragment>
+      </>
     );
   }
 }
