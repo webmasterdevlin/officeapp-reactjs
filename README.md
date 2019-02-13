@@ -1,3 +1,3 @@
-# Express node framework: Backend service for my OfficeApp web and mobile apps.
+# Reactjs Office App.
 
 ![screenshot](./screenshot.png)
