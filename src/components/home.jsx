@@ -2,7 +2,10 @@ import React, { Component } from "react";
 import NavBar from "./navBar";
 import Spinner from "./spinner";
 import { NavLink, Link } from "react-router-dom";
-import { getDepartments } from "../services/department.service";
+import {
+  getDepartments,
+  deleteDepartment
+} from "../services/department.service";
 import { routeCanActivate } from "../services/auth.service";
 import "../styles/home.css";
 
@@ -26,6 +29,28 @@ class Home extends Component {
     }
   };
 
+  handleOnDelete = id => {
+    if (!routeCanActivate()) this.props.history.replace("/");
+
+    const response = window.confirm("Are you sure you want to delete this?");
+    if (!response) return;
+
+    this._deleteSelectedDepartment(id);
+  };
+
+  _deleteSelectedDepartment = async id => {
+    let previousDepartments;
+    try {
+      previousDepartments = this.state.departments;
+      const departments = this.state.departments.filter(d => d.id !== id);
+      await deleteDepartment(id);
+      this.setState({ departments });
+    } catch (e) {
+      alert(`Cannot process this time. ${e.message}`);
+      this.setState({ departments: previousDepartments });
+    }
+  };
+
   render() {
     const { departments } = this.state;
 
@@ -39,30 +64,26 @@ class Home extends Component {
               <th scope="col">NAME</th>
               <th scope="col">DESCRIPTION</th>
               <th scope="col">HEAD</th>
+              <th scope="col" />
             </tr>
           </thead>
           <tbody>
             {departments.map(item => (
               <tr key={item.id}>
+                <td>{item.code}</td>
+                <td>{item.name}</td>
+                <td>{item.description}</td>
+                <td>{item.head}</td>
                 <td>
                   <Link className="links" to={`/edit-detail/${item.id}`}>
-                    {item.code}
+                    <button className="btn btn-info mr-1">Edit</button>
                   </Link>
-                </td>
-                <td>
-                  <Link className="links" to={`/edit-detail/${item.id}`}>
-                    {item.name}
-                  </Link>
-                </td>
-                <td>
-                  <Link className="links" to={`/edit-detail/${item.id}`}>
-                    {item.description}
-                  </Link>
-                </td>
-                <td>
-                  <Link className="links" to={`/edit-detail/${item.id}`}>
-                    {item.head}
-                  </Link>
+                  <button
+                    onClick={() => this.handleOnDelete(item.id)}
+                    className="btn btn-outline-warning ml-1"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
